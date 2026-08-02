@@ -1,10 +1,15 @@
 import { Analytics } from '@vercel/analytics/next'
+import { Geist, Geist_Mono } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
+const geistSans = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
+const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
+
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'Proxy Sheet Generator — Custom Card Sizes',
+  description:
+    'Arrange and print trading card proxies at true physical size with custom dimensions, crop marks, and double-sided alignment.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -39,8 +44,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
+    <html lang="en" className={`bg-background ${geistSans.variable} ${geistMono.variable}`}>
+      <body className="antialiased font-sans">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
