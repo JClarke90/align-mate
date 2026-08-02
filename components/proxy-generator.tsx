@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { Printer, Layers, FileWarning } from "lucide-react"
+import { FileDown, Printer, Layers, FileWarning, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SettingsPanel } from "@/components/settings-panel"
 import { CardList } from "@/components/card-list"
 import { PrintSheet } from "@/components/print-sheet"
+import { buildPdf } from "@/lib/pdf"
 import {
   buildSheets,
   computeLayout,
@@ -51,6 +52,40 @@ export function ProxyGenerator() {
   const totalCards = cards.reduce((sum, c) => sum + Math.max(0, Math.floor(c.quantity || 0)), 0)
   const canPrint = sheets.length > 0 && layout.perPage > 0
 
+  const [exporting, setExporting] = useState(false)
+
+  const handleExportPdf = async () => {
+    if (!canPrint || exporting) return
+    setExporting(true)
+    try {
+      // Yield a frame so the spinner paints before the (synchronous) PDF build.
+      await new Promise((r) => requestAnimationFrame(() => r(null)))
+      const { url } = buildPdf(sheets, settings, layout)
+
+      // In the v0 preview the app runs inside an iframe, where a blob-URL tab
+      // can be blocked — open in a new tab when we're top-level, otherwise
+      // fall back to a direct download.
+      const inIframe = window.self !== window.top
+      if (inIframe) {
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `proxy-sheet-${settings.cardWidth}x${settings.cardHeight}mm.pdf`
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+      } else {
+        window.open(url, "_blank", "noopener,noreferrer")
+      }
+
+      // Release the object URL after the browser has had time to consume it.
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (err) {
+      console.log("[v0] PDF export failed:", err)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 lg:px-8 lg:py-8">
       {/* Header */}
@@ -68,10 +103,22 @@ export function ProxyGenerator() {
             double-sided alignment. No stretching, no resizing.
           </p>
         </div>
-        <Button size="lg" onClick={() => window.print()} disabled={!canPrint} className="shrink-0 gap-2">
-          <Printer className="size-4" />
-          Print / Save PDF
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => window.print()}
+            disabled={!canPrint}
+            className="gap-2"
+          >
+            <Printer className="size-4" />
+            Print
+          </Button>
+          <Button size="lg" onClick={handleExportPdf} disabled={!canPrint || exporting} className="gap-2">
+            {exporting ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
+            {exporting ? "Generating…" : "Export PDF"}
+          </Button>
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
