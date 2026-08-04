@@ -170,6 +170,13 @@
   margin: 0;
 }
 
+/* The true-size print render is hidden on screen and only shown when printing.
+   Using display (not visibility) means the hidden layer contributes zero
+   layout height, so it can't generate blank pages. */
+.print-root {
+  display: none;
+}
+
 @media print {
   html,
   body {
@@ -178,19 +185,15 @@
     padding: 0 !important;
   }
 
-  /* Hide everything, then reveal only the print area. */
-  body * {
-    visibility: hidden !important;
-  }
-  .print-root,
-  .print-root * {
-    visibility: visible !important;
+  /* Remove the on-screen UI from the print layout entirely so it emits no
+     pages, and reveal only the true-size sheets. */
+  .screen-only {
+    display: none !important;
   }
 
   .print-root {
-    position: absolute;
-    left: 0;
-    top: 0;
+    display: block !important;
+    position: static;
     margin: 0;
     padding: 0;
   }

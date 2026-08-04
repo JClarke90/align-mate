@@ -88,6 +88,9 @@ export function ProxyGenerator() {
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 lg:px-8 lg:py-8">
+      {/* On-screen UI. Hidden entirely (display:none) when printing so it
+          contributes no pages. */}
+      <div className="screen-only">
       {/* Header */}
       <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -208,9 +211,11 @@ export function ProxyGenerator() {
           )}
         </section>
       </div>
+      </div>
 
-      {/* Hidden true-size render used only for printing. */}
-      <div className="print-root pointer-events-none fixed -left-[99999px] top-0" aria-hidden="true">
+      {/* True-size render used only for printing. Hidden on screen via CSS,
+          shown (display:block) only inside @media print. */}
+      <div className="print-root" aria-hidden="true">
         {sheets.map((sheet) => (
           <PrintSheet key={sheet.id} sheet={sheet} settings={settings} layout={layout} print />
         ))}
