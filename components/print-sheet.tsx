@@ -21,7 +21,11 @@ export function PrintSheet({ sheet, settings, layout, print = false }: Props) {
       className="print-sheet relative overflow-hidden"
       style={{
         width: mm(layout.pageWidth),
-        height: mm(layout.pageHeight),
+        // In print, keep the box a hair under the true page height. A box
+        // exactly equal to the page height rounds up by a sub-pixel and spills
+        // onto a blank following page (doubling the page count). Cards and crop
+        // marks are absolutely positioned from the top, so they don't shift.
+        height: mm(print ? layout.pageHeight - 0.5 : layout.pageHeight),
         background: "#ffffff",
         // subtle preview-only chrome; removed in print via CSS
         boxShadow: print ? "none" : "0 1px 3px rgba(0,0,0,0.25)",
