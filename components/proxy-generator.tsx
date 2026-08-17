@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { FileDown, Printer, Layers, FileWarning, Loader2 } from "lucide-react"
+import { FileDown, FileCode, Printer, Layers, FileWarning, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SettingsPanel } from "@/components/settings-panel"
 import { CardList } from "@/components/card-list"
 import { PrintSheet } from "@/components/print-sheet"
 import { buildPdf } from "@/lib/pdf"
+import { buildSvgSheets } from "@/lib/svg"
 import {
   buildSheets,
   computeLayout,
@@ -86,8 +87,39 @@ export function ProxyGenerator() {
     }
   }
 
+  const [exportingSvg, setExportingSvg] = useState(false)
+
+  const handleExportSvg = async () => {
+    if (!canPrint || exportingSvg) return
+    setExportingSvg(true)
+    try {
+      await new Promise((r) => requestAnimationFrame(() => r(null)))
+      // One SVG per sheet (SVG has no multi-page concept). Front, plus a
+      // mirrored back when duplex is on.
+      const svgSheets = buildSvgSheets(sheets, settings, layout)
+
+      // Download each file. A tiny stagger keeps browsers from collapsing the
+      // rapid programmatic downloads into a single one.
+      svgSheets.forEach((s, i) => {
+        setTimeout(() => {
+          const a = document.createElement("a")
+          a.href = s.url
+          a.download = s.name
+          document.body.appendChild(a)
+          a.click()
+          a.remove()
+          setTimeout(() => URL.revokeObjectURL(s.url), 60_000)
+        }, i * 400)
+      })
+    } catch (err) {
+      console.log("[v0] SVG export failed:", err)
+    } finally {
+      setExportingSvg(false)
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-[1400px] px-4 py-6 lg:px-8 lg:py-8">
+    <div className="print-container mx-auto max-w-[1400px] px-4 py-6 lg:px-8 lg:py-8">
       {/* On-screen UI. Hidden entirely (display:none) when printing so it
           contributes no pages. */}
       <div className="screen-only">
@@ -116,6 +148,16 @@ export function ProxyGenerator() {
           >
             <Printer className="size-4" />
             Print
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={handleExportSvg}
+            disabled={!canPrint || exportingSvg}
+            className="gap-2"
+          >
+            {exportingSvg ? <Loader2 className="size-4 animate-spin" /> : <FileCode className="size-4" />}
+            {exportingSvg ? "Generating…" : "Export SVG"}
           </Button>
           <Button size="lg" onClick={handleExportPdf} disabled={!canPrint || exporting} className="gap-2">
             {exporting ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}

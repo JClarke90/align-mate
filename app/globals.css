@@ -191,6 +191,15 @@
     display: none !important;
   }
 
+  /* Neutralize the app's page padding/max-width so the first sheet starts at
+     the true page origin (its top padding would otherwise push content down
+     and overflow onto extra pages). */
+  .print-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
   .print-root {
     display: block !important;
     position: static;
