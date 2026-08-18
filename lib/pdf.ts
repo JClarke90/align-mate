@@ -53,6 +53,16 @@ export function buildPdf(sheets: Sheet[], settings: Settings, layout: GridLayout
       }
     }
 
+    // Card outlines — stroke centered on each card boundary (jsPDF strokes are
+    // centered on the path), so the card stays true size.
+    if (settings.cardOutline) {
+      doc.setDrawColor(17, 24, 39) // #111827
+      doc.setLineWidth(settings.cardOutlineWidth)
+      for (const slot of sheet.slots) {
+        doc.rect(slot.x, slot.y, settings.cardWidth, settings.cardHeight, "S")
+      }
+    }
+
     // Crop marks — thin black ticks at the extension of every cut line.
     if (settings.cropMarks) {
       doc.setDrawColor(17, 24, 39) // #111827

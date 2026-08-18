@@ -163,6 +163,30 @@ export function SettingsPanel({ settings, onChange, perPage, cols, rows }: Props
 
       <Separator />
 
+      {/* Card outline */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">Card outline</h3>
+            <p className="text-xs text-muted-foreground">Border around every card front &amp; back</p>
+          </div>
+          <Switch checked={settings.cardOutline} onCheckedChange={(v) => onChange({ cardOutline: v })} />
+        </div>
+        {settings.cardOutline && (
+          <NumberField
+            id="outlineWidth"
+            label="Outline width"
+            value={settings.cardOutlineWidth}
+            step={0.1}
+            min={0.1}
+            suffix="mm"
+            onChange={(v) => onChange({ cardOutlineWidth: v })}
+          />
+        )}
+      </section>
+
+      <Separator />
+
       {/* Duplex */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">

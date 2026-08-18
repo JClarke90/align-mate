@@ -44,6 +44,20 @@ export function buildSvgSheets(sheets: Sheet[], settings: Settings, layout: Grid
       )
     }
 
+    // Card outlines — stroke centered on each card boundary (SVG strokes are
+    // centered on the path), so the card keeps its true size.
+    if (settings.cardOutline) {
+      const rects = sheet.slots
+        .map(
+          (slot) =>
+            `<rect x="${round(slot.x)}" y="${round(slot.y)}" ` +
+            `width="${round(settings.cardWidth)}" height="${round(settings.cardHeight)}" ` +
+            `fill="none" stroke="#111827" stroke-width="${round(settings.cardOutlineWidth)}"/>`,
+        )
+        .join("")
+      parts.push(`<g>${rects}</g>`)
+    }
+
     // Crop marks — thin black ticks at the extension of every cut line.
     if (settings.cropMarks) {
       const lines: string[] = []

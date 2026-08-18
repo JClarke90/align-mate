@@ -82,6 +82,28 @@ export function PrintSheet({ sheet, settings, layout, print = false }: Props) {
         )
       })}
 
+      {/* Card outlines — a border centered on each card's boundary so the card
+          keeps its true size (half the stroke sits inside, half outside). */}
+      {settings.cardOutline &&
+        sheet.slots.map((slot) => {
+          const w = settings.cardOutlineWidth
+          return (
+            <div
+              key={`outline-${slot.key}`}
+              style={{
+                position: "absolute",
+                left: mm(slot.x - w / 2),
+                top: mm(slot.y - w / 2),
+                width: mm(settings.cardWidth + w),
+                height: mm(settings.cardHeight + w),
+                border: `${w}mm solid #111827`,
+                boxSizing: "border-box",
+                pointerEvents: "none",
+              }}
+            />
+          )
+        })}
+
       {/* Crop marks (corner ticks at the extension of every cut line) */}
       {settings.cropMarks && (
         <>

@@ -25,6 +25,8 @@ export type Settings = {
   paper: PaperKey
   cropMarks: boolean
   cropMarkLength: number // mm
+  cardOutline: boolean // draw a border around each card
+  cardOutlineWidth: number // mm
   duplex: boolean
   sharedBack: string | null // data URL for a back used by all cards
   backOffsetX: number // mm, fine-tune back alignment
@@ -39,6 +41,8 @@ export const DEFAULT_SETTINGS: Settings = {
   paper: "a4",
   cropMarks: true,
   cropMarkLength: 3,
+  cardOutline: false,
+  cardOutlineWidth: 1,
   duplex: true,
   sharedBack: null,
   backOffsetX: 0,
