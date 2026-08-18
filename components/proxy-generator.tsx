@@ -55,27 +55,26 @@ export function ProxyGenerator() {
 
   const [exporting, setExporting] = useState(false)
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = () => {
     if (!canPrint || exporting) return
     setExporting(true)
     try {
-      // Yield a frame so the spinner paints before the (synchronous) PDF build.
-      await new Promise((r) => requestAnimationFrame(() => r(null)))
+      // Build synchronously and trigger the download in the SAME tick as the
+      // click. Any await / setTimeout before this point severs the browser's
+      // transient user activation, which silently blocks the download.
       const { url } = buildPdf(sheets, settings, layout)
 
-      // In the v0 preview the app runs inside an iframe, where a blob-URL tab
-      // can be blocked — open in a new tab when we're top-level, otherwise
-      // fall back to a direct download.
+      // In the v0 preview the app runs inside an iframe, where opening a
+      // blob-URL tab is blocked — download in place. When top-level, open in a
+      // new tab like a normal PDF export.
       const inIframe = window.self !== window.top
-      if (inIframe) {
+      if (inIframe || !window.open(url, "_blank", "noopener,noreferrer")) {
         const a = document.createElement("a")
         a.href = url
         a.download = `proxy-sheet-${settings.cardWidth}x${settings.cardHeight}mm.pdf`
         document.body.appendChild(a)
         a.click()
         a.remove()
-      } else {
-        window.open(url, "_blank", "noopener,noreferrer")
       }
 
       // Release the object URL after the browser has had time to consume it.
@@ -89,27 +88,23 @@ export function ProxyGenerator() {
 
   const [exportingSvg, setExportingSvg] = useState(false)
 
-  const handleExportSvg = async () => {
+  const handleExportSvg = () => {
     if (!canPrint || exportingSvg) return
     setExportingSvg(true)
     try {
-      await new Promise((r) => requestAnimationFrame(() => r(null)))
       // One SVG per sheet (SVG has no multi-page concept). Front, plus a
-      // mirrored back when duplex is on.
+      // mirrored back when duplex is on. Build and trigger downloads
+      // synchronously so the click's user activation still covers them.
       const svgSheets = buildSvgSheets(sheets, settings, layout)
 
-      // Download each file. A tiny stagger keeps browsers from collapsing the
-      // rapid programmatic downloads into a single one.
-      svgSheets.forEach((s, i) => {
-        setTimeout(() => {
-          const a = document.createElement("a")
-          a.href = s.url
-          a.download = s.name
-          document.body.appendChild(a)
-          a.click()
-          a.remove()
-          setTimeout(() => URL.revokeObjectURL(s.url), 60_000)
-        }, i * 400)
+      svgSheets.forEach((s) => {
+        const a = document.createElement("a")
+        a.href = s.url
+        a.download = s.name
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        setTimeout(() => URL.revokeObjectURL(s.url), 60_000)
       })
     } catch (err) {
       console.log("[v0] SVG export failed:", err)
